@@ -19,6 +19,7 @@
 #		HUBOT_CIRCLECI_TOKEN
 #		HUBOT_GITHUB_ORG (optional)
 #		HUBOT_CIRCLECI_HOST (optional. "circleci.com" is default.)
+#		HUBOT_DEPLOYERS (optional. comma separated list of user names.)
 #
 # Notes:
 #		Set HUBOT_CIRCLECI_TOKEN with a valid API Token from CircleCI.
@@ -106,17 +107,22 @@ clearAllProjectsCache = (msg, endpoint) ->
 				clearProjectCache(msg, endpoint, projectname)
 
 checkToken = (msg) ->
-	console.log(msg)
-	if msg.user.name == 'jeff' || msg.user.name == 'jon'
-		if process.env.HUBOT_CIRCLECI_TOKEN?
-			return true
-		else
-			msg.send 'You need to set HUBOT_CIRCLECI_TOKEN to a valid CircleCI API token'
-			return false
-	else
-		msg.send 'You are not a valid deployer'
+	if ! process.env.HUBOT_CIRCLECI_TOKEN?
+		msg.send 'You need to set HUBOT_CIRCLECI_TOKEN to a valid CircleCI API token'
 		return false
 
+	deployers = process.env.HUBOT_DEPLOYERS
+	if deployers
+		ds = deployers.split(',')
+		found = false
+		for deployer in ds
+			if msg.message.user.name == deployer.trim()
+				found = true
+				break
+
+		if ! found
+			msg.send "You are not a valid deployer. Valid: #{deployers}"
+			return false
 
 handleResponse = (msg, handler) ->
 	(err, res, body) ->
