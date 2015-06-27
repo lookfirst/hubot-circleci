@@ -54,24 +54,24 @@ formatBuildStatus = (build) ->
 
 retryBuild = (msg, endpoint, project, build_num) ->
 	msg.http("#{endpoint}/project/#{project}/#{build_num}/retry?circle-token=#{process.env.HUBOT_CIRCLECI_TOKEN}")
-	.headers("Accept": "application/json")
-	.post('{}') handleResponse msg, (response) ->
-		msg.send "Retrying build #{build_num} of #{project} [#{response.branch}] with build #{response.build_num}"
+		.headers("Accept": "application/json")
+		.post('{}') handleResponse msg, (response) ->
+			msg.send "Retrying build #{build_num} of #{project} [#{response.branch}] with build #{response.build_num}"
 
 getProjectsByStatus = (msg, endpoint, status, action) ->
 	projects = []
 	msg.http("#{endpoint}/projects?circle-token=#{process.env.HUBOT_CIRCLECI_TOKEN}")
-	.headers("Accept": "application/json")
-	.get() handleResponse msg, (response) ->
-		for project in response
-			build_branch = project.branches[project.default_branch]
-			last_build = build_branch.recent_builds[0]
-			if last_build.outcome is status
-				projects.push project
-		if action is 'list'
-			listProjectsByStatus(msg, projects, status)
-		else if action is 'retry'
-			retryProjectsByStatus(msg, projects, status)
+		.headers("Accept": "application/json")
+		.get() handleResponse msg, (response) ->
+			for project in response
+				build_branch = project.branches[project.default_branch]
+				last_build = build_branch.recent_builds[0]
+				if last_build.outcome is status
+					projects.push project
+			if action is 'list'
+				listProjectsByStatus(msg, projects, status)
+			else if action is 'retry'
+				retryProjectsByStatus(msg, projects, status)
 
 retryProjectsByStatus = (msg, projects, status) ->
 	for project in projects
@@ -93,17 +93,17 @@ listProjectsByStatus = (msg, projects, status) ->
 
 clearProjectCache = (msg, endpoint, project) ->
 	msg.http("#{endpoint}/project/#{project}/build-cache?circle-token=#{process.env.HUBOT_CIRCLECI_TOKEN}")
-	.headers("Accept": "application/json")
-	.del('{}') handleResponse msg, (response) ->
-		msg.send "Cleared build cache for #{project}"
+		.headers("Accept": "application/json")
+		.del('{}') handleResponse msg, (response) ->
+			msg.send "Cleared build cache for #{project}"
 
 clearAllProjectsCache = (msg, endpoint) ->
 	msg.http("#{endpoint}/projects?circle-token=#{process.env.HUBOT_CIRCLECI_TOKEN}")
-	.headers("Accept": "application/json")
-	.get() handleResponse msg, (response) ->
-		for project in response
-			projectname = escape(toProject(project.reponame))
-			clearProjectCache(msg, endpoint, projectname)
+		.headers("Accept": "application/json")
+		.get() handleResponse msg, (response) ->
+			for project in response
+				projectname = escape(toProject(project.reponame))
+				clearProjectCache(msg, endpoint, projectname)
 
 checkToken = (msg) ->
 	unless process.env.HUBOT_CIRCLECI_TOKEN?
@@ -125,7 +125,7 @@ handleResponse = (msg, handler) ->
 				msg.send 'Not authorized. Did you set HUBOT_CIRCLECI_TOKEN correctly?'
 			when 500
 				msg.send 'Yikes! I turned that circle into a square' # Don't send body since we'll get HTML back from Circle
-			when 200
+			when 200 || 201
 				response = JSON.parse(body)
 				handler response
 			else
@@ -148,13 +148,13 @@ module.exports = (robot) ->
 		msg.send("Deploying #{project}@#{branch} to #{situation} ...")
 
 		msg.http("#{endpoint}/project/#{project}/tree/#{branch}?circle-token=#{process.env.HUBOT_CIRCLECI_TOKEN}")
-		.headers("Accept": "application/json")
-		.post(params) handleResponse msg, (response) ->
-			if response.length == 0
-				msg.send "Current status: #{project} [#{branch}]: unknown"
-			else
-				currentBuild = response[0]
-				msg.send "Current status: #{formatBuildStatus(currentBuild)}"
+			.headers("Accept": "application/json")
+			.post(params) handleResponse msg, (response) ->
+				if response.length == 0
+					msg.send "Current status: #{project} [#{branch}]: unknown"
+				else
+					currentBuild = response[0]
+					msg.send "Current status: #{formatBuildStatus(currentBuild)}"
 
 	robot.respond /circle me (\S*)\s*(\S*)/i, (msg) ->
 		unless checkToken(msg)
@@ -162,13 +162,13 @@ module.exports = (robot) ->
 		project = escape(toProject(msg.match[1]))
 		branch = if msg.match[2] then escape(msg.match[2]) else 'master'
 		msg.http("#{endpoint}/project/#{project}/tree/#{branch}?circle-token=#{process.env.HUBOT_CIRCLECI_TOKEN}")
-		.headers("Accept": "application/json")
-		.get() handleResponse msg, (response) ->
-			if response.length == 0
-				msg.send "Current status: #{project} [#{branch}]: unknown"
-			else
-				currentBuild = response[0]
-				msg.send "Current status: #{formatBuildStatus(currentBuild)}"
+			.headers("Accept": "application/json")
+			.get() handleResponse msg, (response) ->
+				if response.length == 0
+					msg.send "Current status: #{project} [#{branch}]: unknown"
+				else
+					currentBuild = response[0]
+					msg.send "Current status: #{formatBuildStatus(currentBuild)}"
 
 	robot.respond /circle last (\S*)\s*(\S*)/i, (msg) ->
 		unless checkToken(msg)
@@ -176,18 +176,18 @@ module.exports = (robot) ->
 		project = escape(toProject(msg.match[1]))
 		branch = if msg.match[2] then escape(msg.match[2]) else 'master'
 		msg.http("#{endpoint}/project/#{project}/tree/#{branch}?circle-token=#{process.env.HUBOT_CIRCLECI_TOKEN}")
-		.headers("Accept": "application/json")
-		.get() handleResponse msg, (response) ->
-			if response.length == 0
-				msg.send "Current status: #{project} [#{branch}]: unknown"
-			else
-				last = response[0]
-				if last.status != 'running'
-					msg.send "Current status: #{formatBuildStatus(last)}"
-				else if last.previous && last.previous.status
-					msg.send "Last status: #{formatBuildStatus(last)}"
+			.headers("Accept": "application/json")
+			.get() handleResponse msg, (response) ->
+				if response.length == 0
+					msg.send "Current status: #{project} [#{branch}]: unknown"
 				else
-					msg.send "Last build status for #{project} [#{branch}]: unknown"
+					last = response[0]
+					if last.status != 'running'
+						msg.send "Current status: #{formatBuildStatus(last)}"
+					else if last.previous && last.previous.status
+						msg.send "Last status: #{formatBuildStatus(last)}"
+					else
+						msg.send "Last build status for #{project} [#{branch}]: unknown"
 
 	robot.respond /circle retry (.*) (.*)/i, (msg) ->
 		unless checkToken(msg)
@@ -202,11 +202,11 @@ module.exports = (robot) ->
 		if build_num is 'last'
 			branch = 'master'
 			msg.http("#{endpoint}/project/#{project}/tree/#{branch}?circle-token=#{process.env.HUBOT_CIRCLECI_TOKEN}")
-			.headers("Accept": "application/json")
-			.get() handleResponse msg, (response) ->
-				last = response[0]
-				build_num = last.build_num
-				retryBuild(msg, endpoint, project, build_num)
+				.headers("Accept": "application/json")
+				.get() handleResponse msg, (response) ->
+					last = response[0]
+					build_num = last.build_num
+					retryBuild(msg, endpoint, project, build_num)
 		else
 			retryBuild(msg, endpoint, project, build_num)
 
@@ -228,9 +228,9 @@ module.exports = (robot) ->
 			return
 		build_num = escape(msg.match[2])
 		msg.http("#{endpoint}/project/#{project}/#{build_num}/cancel?circle-token=#{process.env.HUBOT_CIRCLECI_TOKEN}")
-		.headers("Accept": "application/json")
-		.post('{}') handleResponse msg, (response) ->
-			msg.send "Canceled build #{response.build_num} for #{project} [#{response.branch}]"
+			.headers("Accept": "application/json")
+			.post('{}') handleResponse msg, (response) ->
+				msg.send "Canceled build #{response.build_num} for #{project} [#{response.branch}]"
 
 	robot.respond /circle clear (.*)/i, (msg) ->
 		unless checkToken(msg)
