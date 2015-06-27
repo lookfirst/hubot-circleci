@@ -241,24 +241,24 @@ module.exports = (robot) ->
 			project = escape(toProject(msg.match[1]))
 			clearProjectCache(msg, endpoint, project)
 
-#	robot.router.post "/hubot/circle", (req, res) ->
-#		console.log "Received circle webhook callback"
-#
-#		query = querystring.parse url.parse(req.url).query
-#		res.end JSON.stringify {
-#			received: true #some client have problems with an empty response
-#		}
-#
-#		user = robot.brain.userForId 'broadcast'
-#		user.room = query.room if query.room
-#		user.type = query.type if query.type
-#
-#		console.log "Received CircleCI payload: #{util.inspect(req.body.payload)}"
-#
-#		try
-#			robot.send user, formatBuildStatus(req.body.payload)
-#
-#			console.log "Sent CircleCI build status message"
-#
-#		catch error
-#			console.log "circle hook error: #{error}. Payload: #{util.inspect(req.body.payload)}"
+	robot.router.post "/gearbot/circle", (req, res) ->
+		console.log "Received circle webhook callback"
+
+		query = querystring.parse url.parse(req.url).query
+		res.end JSON.stringify {
+			received: true #some client have problems with an empty response
+		}
+
+		user = robot.brain.userForId 'broadcast'
+		user.room = query.room if query.room
+		user.type = query.type if query.type
+
+		console.log "Received CircleCI payload: #{util.inspect(req.body.payload)}"
+
+		try
+			robot.send user, formatBuildStatus(req.body.payload)
+
+			console.log "Sent CircleCI build status message"
+
+		catch error
+			console.log "circle hook error: #{error}. Payload: #{util.inspect(req.body.payload)}"
