@@ -149,6 +149,7 @@ module.exports = (robot) ->
 
 		msg.http("#{endpoint}/project/#{project}/tree/#{branch}?circle-token=#{process.env.HUBOT_CIRCLECI_TOKEN}")
 			.headers("Accept": "application/json")
+			.headers("Content-type": "application/json")
 			.post(params) handleResponse msg, (response) ->
 				if response.length == 0
 					msg.send "Current status: #{project} [#{branch}]: unknown"
