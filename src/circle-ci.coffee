@@ -125,6 +125,9 @@ handleResponse = (msg, handler) ->
 				msg.send 'Not authorized. Did you set HUBOT_CIRCLECI_TOKEN correctly?'
 			when 500
 				msg.send 'Yikes! I turned that circle into a square' # Don't send body since we'll get HTML back from Circle
+			when 201
+				response = JSON.parse(body)
+				handler response
 			when 200
 				response = JSON.parse(body)
 				handler response
@@ -151,11 +154,7 @@ module.exports = (robot) ->
 			.headers("Accept": "application/json")
 			.headers("Content-Type": "application/json")
 			.post(JSON.stringify(params)) handleResponse msg, (response) ->
-				if response.length == 0
-					msg.send "Current status: #{project} [#{branch}]: unknown"
-				else
-					currentBuild = response[0]
-					msg.send "Current status: #{formatBuildStatus(currentBuild)}"
+				msg.send "Current status: #{formatBuildStatus(response)}"
 
 	robot.respond /circle me (\S*)\s*(\S*)/i, (msg) ->
 		unless checkToken(msg)
