@@ -106,11 +106,12 @@ clearAllProjectsCache = (msg, endpoint) ->
 				clearProjectCache(msg, endpoint, projectname)
 
 checkToken = (msg) ->
-	unless process.env.HUBOT_CIRCLECI_TOKEN?
-		msg.send 'You need to set HUBOT_CIRCLECI_TOKEN to a valid CircleCI API token'
-		return false
-	else
-		return true
+	if msg.user.name == 'jeff' || msg.user.name == 'jon'
+		if process.env.HUBOT_CIRCLECI_TOKEN?
+			return true
+		else
+			msg.send 'You need to set HUBOT_CIRCLECI_TOKEN to a valid CircleCI API token'
+
 
 handleResponse = (msg, handler) ->
 	(err, res, body) ->
@@ -249,7 +250,7 @@ module.exports = (robot) ->
 			received: true #some client have problems with an empty response
 		}
 
-		user = robot.brain.userForId 'broadcast'
+		user = {}
 		user.room = query.room if query.room
 		user.type = query.type if query.type
 
