@@ -5,6 +5,7 @@
 #		None
 #
 # Commands:
+#		hubot deploy [version=master] [situation=sandbox]
 #		hubot circle me <user>/<repo> [branch] - Returns the build status of https://circleci.com/<user>/<repo>
 #		hubot circle last <user>/<repo> [branch] - Returns the build status of the last complete build of https://circleci.com/<user>/<repo>
 #		hubot circle retry <user>/<repo> <build_num> - Retries the build
@@ -142,6 +143,11 @@ decodeMatch = (match) ->
 	return {version: version, situation: situation}
 
 module.exports = (robot) ->
+
+	robot.respond /.*deploy\s*([\w\d.]*)\s*(production|sandbox)*/i, (res) ->
+		{version, situation} = decodeMatch(res.match)
+
+		res.send("Deploying #{version} to #{situation} ...")
 
 	robot.respond /circle me (\S*)\s*(\S*)/i, (msg) ->
 		unless checkToken(msg)
