@@ -143,7 +143,6 @@ module.exports = (robot) ->
 
 		params =
 			build_parameters:
-				BRANCH: branch
 				SITUATION: situation
 
 		msg.send("Deploying #{project}@#{branch} to #{situation} ...")
