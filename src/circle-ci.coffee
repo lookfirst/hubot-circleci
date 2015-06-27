@@ -122,7 +122,10 @@ checkToken = (msg) ->
 
 		if ! found
 			msg.send "You are not a valid deployer. Valid: #{deployers}"
-			return false
+
+		return found
+	else
+		return true
 
 handleResponse = (msg, handler) ->
 	(err, res, body) ->
