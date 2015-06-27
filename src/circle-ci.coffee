@@ -106,11 +106,16 @@ clearAllProjectsCache = (msg, endpoint) ->
 				clearProjectCache(msg, endpoint, projectname)
 
 checkToken = (msg) ->
+	console.log(msg.user)
 	if msg.user.name == 'jeff' || msg.user.name == 'jon'
 		if process.env.HUBOT_CIRCLECI_TOKEN?
 			return true
 		else
 			msg.send 'You need to set HUBOT_CIRCLECI_TOKEN to a valid CircleCI API token'
+			return false
+	else
+		msg.send 'You are not a valid deployer'
+		return false
 
 
 handleResponse = (msg, handler) ->
