@@ -128,9 +128,6 @@ handleResponse = (msg, handler) ->
 			when 200
 				response = JSON.parse(body)
 				handler response
-			when 201
-				response = JSON.parse(body)
-				handler response
 			else
 				msg.send "Hmm. I don't know how to process that CircleCI response: #{res.statusCode}", body
 
