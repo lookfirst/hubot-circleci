@@ -106,7 +106,7 @@ clearAllProjectsCache = (msg, endpoint) ->
 				clearProjectCache(msg, endpoint, projectname)
 
 checkToken = (msg) ->
-	console.log(msg.user)
+	console.log(msg)
 	if msg.user.name == 'jeff' || msg.user.name == 'jon'
 		if process.env.HUBOT_CIRCLECI_TOKEN?
 			return true
