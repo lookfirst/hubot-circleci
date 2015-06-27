@@ -5,7 +5,7 @@
 #		None
 #
 # Commands:
-#		hubot deploy [version=master] [situation=sandbox]
+#		hubot deploy <user>/<repo> [branch=master] [situation=sandbox]
 #		hubot circle me <user>/<repo> [branch] - Returns the build status of https://circleci.com/<user>/<repo>
 #		hubot circle last <user>/<repo> [branch] - Returns the build status of the last complete build of https://circleci.com/<user>/<repo>
 #		hubot circle retry <user>/<repo> <build_num> - Retries the build
@@ -131,23 +131,31 @@ handleResponse = (msg, handler) ->
 			else
 				msg.send "Hmm. I don't know how to process that CircleCI response: #{res.statusCode}", body
 
-decodeMatch = (match) ->
-	version = match[1] || 'master'
-
-	# deploy sandbox || deploy production deploys master to either
-	if version == 'sandbox' || version == 'production'
-		version = 'master'
-
-	situation = match[2] || 'sandbox'
-
-	return {version: version, situation: situation}
-
 module.exports = (robot) ->
 
-	robot.respond /.*deploy\s*([\w\d.]*)\s*(production|sandbox)*/i, (res) ->
-		{version, situation} = decodeMatch(res.match)
+	robot.respond /.*deploy\s*(\S*)\s*(\S*)\s*(production|sandbox)/i, (msg) ->
+		unless checkToken(msg)
+			return
 
-		res.send("Deploying #{version} to #{situation} ...")
+		project = escape(toProject(msg.match[1]))
+		branch = if msg.match[2] then escape(msg.match[2]) else 'master'
+		situation = if msg.match[3] then escape(msg.match[3]) else 'sandbox'
+
+		params =
+			build_parameters:
+				BRANCH: branch
+				SITUATION: situation
+
+		msg.send("Deploying #{project}@#{branch} to #{situation} ...")
+
+		msg.http("#{endpoint}/project/#{project}/tree/#{branch}?circle-token=#{process.env.HUBOT_CIRCLECI_TOKEN}")
+		.headers("Accept": "application/json")
+		.post(params) handleResponse msg, (response) ->
+			if response.length == 0
+				msg.send "Current status: #{project} [#{branch}]: unknown"
+			else
+				currentBuild = response[0]
+				msg.send "Current status: #{formatBuildStatus(currentBuild)}"
 
 	robot.respond /circle me (\S*)\s*(\S*)/i, (msg) ->
 		unless checkToken(msg)
