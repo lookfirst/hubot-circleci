@@ -151,7 +151,7 @@ handleResponse = (msg, handler) ->
 
 module.exports = (robot) ->
 
-	robot.respond /.*deploy\s*(\S*)\s*(\S*)\s*(production|sandbox)/i, (msg) ->
+	robot.respond /.*deploy\s*(\S*)\s*(\S*)\s*(production|sandbox|demo)/i, (msg) ->
 		unless checkToken(msg)
 			return
 
