@@ -48,6 +48,8 @@ toSha = (vcs_revision) ->
 	vcs_revision.substring(0,7)
 
 toDisplay = (status) ->
+	if status == 'not_running'
+		status = 'running'
 	status[0].toUpperCase() + status.slice(1)
 
 formatBuildStatus = (build) ->
@@ -151,7 +153,7 @@ handleResponse = (msg, handler) ->
 
 module.exports = (robot) ->
 
-	robot.respond /.*deploy\s*(\S*)\s*(\S*)\s*(production|sandbox|demo)/i, (msg) ->
+	robot.respond /.*deploy\s*(\S*)\s*(\S*)\s*(\S*)/i, (msg) ->
 		unless checkToken(msg)
 			return
 
@@ -257,23 +259,20 @@ module.exports = (robot) ->
 			clearProjectCache(msg, endpoint, project)
 
 	robot.router.post "/gearbot/circle", (req, res) ->
-		console.log "Received circle webhook callback"
+		console.log "Received CircleCI payload: #{util.inspect(req.body.payload)}"
 
-		query = querystring.parse url.parse(req.url).query
-		res.end JSON.stringify {
-			received: true #some client have problems with an empty response
-		}
+		query = querystring.parse(url.parse(req.url).query)
 
 		user = {}
 		user.room = query.room if query.room
 		user.type = query.type if query.type
 
-		console.log "Received CircleCI payload: #{util.inspect(req.body.payload)}"
-
 		try
 			robot.send user, formatBuildStatus(req.body.payload)
-
 			console.log "Sent CircleCI build status message"
-
 		catch error
-			console.log "circle hook error: #{error}. Payload: #{util.inspect(req.body.payload)}"
+			console.log "Circle hook error: #{error}."
+
+		res.end JSON.stringify {
+			received: true #some client have problems with an empty response
+		}
